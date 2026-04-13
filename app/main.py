@@ -1501,7 +1501,7 @@ elif menu == "📖 Acerca de ECOMETRICS":
     - **La Analítica Técnica**: En bioestadística, las métricas son el lenguaje que nos permite interpretar patrones invisibles al ojo humano. ECOMETRICS actúa como un procesador maestro que transforma observaciones en conocimiento aplicable.
 
     ### III. Perfil del Desarrollador y Respaldo Científico
-    **ECOMETRICS** ha sido conceptualizado y desarrollado por **Erick Elio Chavez Gurrola**, Biólogo y Maestro en Ingeniería Forestal por el **TecNM**. 
+    **ECOMETRICS** ha sido conceptualizado y desarrollado por **Erick Elio Chavez Gurrola**, Biólogo por el **TecNM**. 
     Con una sólida formación en estadística ecológica, diseño experimental y manejo forestal sustentable, el desarrollador integra la biología de campo con la ingeniería de datos. Su experiencia previa en el desarrollo de plataformas de análisis (como TANIA, FORXIME y CHANNEL) garantiza que ECOMETRICS sea una herramienta de análisis científico robusta y confiable.
 
     ### IV. Innovación Metodológica
@@ -1568,7 +1568,7 @@ st.markdown(f"""
         <div class="footer-col">
             <h4>Desarrollador</h4>
             <p><b>Erick Elio Chavez Gurrola</b><br>
-            Biólogo | M. en Ing. Forestal<br>
+            Biólogo<br>
             <a href="https://orcid.org/0009-0007-7054-6999" style="color:#2e7d32; text-decoration:none; font-weight:700;">ORCID: 0009-0007-7054-6999</a></p>
         </div>
         <div class="footer-col">
