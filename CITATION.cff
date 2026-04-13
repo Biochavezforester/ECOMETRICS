@@ -6,7 +6,7 @@ authors:
     orcid: "https://orcid.org/0009-0007-7054-6999"
 title: "ECOMETRICS: Suite Bioestadística para Monitoreo Ecológico"
 version: 1.0.0
-doi: 10.5281/zenodo.0000000
+doi: 10.5281/zenodo.19557761
 date-published: 2026-04-13
 url: "https://github.com/Biochavezforester/ECOMETRICS"
 abstract: "ECOMETRICS is a comprehensive bio-statistical suite for environmental and biodiversity monitoring, implementing iNEXT models, forestry inventory analysis, and multivariate statistics."

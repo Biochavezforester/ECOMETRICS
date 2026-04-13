@@ -1,6 +1,6 @@
 # 🌿 ECOMETRICS
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.XXXXXXX.svg)](https://doi.org/10.5281/zenodo.XXXXXXX)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19557761.svg)](https://doi.org/10.5281/zenodo.19557761)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B.svg)](https://streamlit.io/)
@@ -54,7 +54,7 @@ Si utilizas **ECOMETRICS** en tu investigación académica, por favor cítalo de
   title = {ECOMETRICS: Suite Bioestadística para Monitoreo Ecológico},
   version = {1.0.0},
   year = {2026},
-  doi = {10.5281/zenodo.XXXXXXX},
+  doi = {10.5281/zenodo.19557761},
   url = {https://github.com/Biochavezforester/ECOMETRICS}
 }
 ```
