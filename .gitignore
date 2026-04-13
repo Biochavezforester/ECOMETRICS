@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+test_output.xlsx
+scratch/
+.streamlit/config.toml
+*.log
+.DS_Store
+.env
