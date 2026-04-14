@@ -813,8 +813,52 @@ elif menu == "🔬 Evaluación de variables":
             if num_df.empty:
                 st.warning("⚠️ No se detectaron columnas numéricas. Asegúrate de que las variables ambientales sean números.")
             else:
-                tab_corr, tab_desc = st.tabs(["📉 1. Mapa de Correlaciones", "📊 2. Distribución y Descriptiva"])
+                tab_corr, tab_desc, tab_indval = st.tabs(["📉 1. Mapa de Correlaciones", "📊 2. Distribución y Descriptiva", "🌲 3. IndVal (Especies Indicadoras)"])
                 
+                with tab_indval:
+                    st.subheader("🌲 Análisis de Especies Indicadoras (IndVal)")
+                    st.markdown("Para este análisis necesitas una **Matriz de Abundancia** (especies numéricas) y una **Columna Categórica** que defina el grupo, hábitat o zona de cada sitio.")
+                    
+                    cat_cols = b_df.select_dtypes(exclude=[np.number]).columns.tolist()
+                    if not cat_cols:
+                        st.warning("⚠️ No se detectaron columnas de texto/categóricas en tu archivo. Necesitas al menos una columna (ej. 'Ecosistema', 'Zona', 'Tratamiento') para agrupar los sitios.")
+                    else:
+                        col_group = st.selectbox("Selecciona la Columna de Agrupación (Hábitat/Zonificación):", cat_cols)
+                        
+                        sp_cols = [c for c in num_df.columns]
+                        sel_sp_cols = st.multiselect("Selecciona las Especies a Evaluar (Numéricas):", sp_cols, default=sp_cols)
+                        
+                        if sel_sp_cols:
+                            if st.button("🚀 Ejecutar Análisis IndVal"):
+                                try:
+                                    sitios_dict = b_df[col_group].to_dict()
+                                    com_matrix = b_df[sel_sp_cols].copy()
+                                    com_matrix.index = b_df.index
+                                    
+                                    from modules.stats_pro_v2 import StatsProEngine
+                                    indval_res = StatsProEngine.run_indval(com_matrix, sitios_dict)
+                                    
+                                    if not indval_res.empty:
+                                        st.success("✅ Análisis IndVal calculado mediante el algoritmo de Dufrêne & Legendre (1997).")
+                                        
+                                        # Formateo visual
+                                        st.dataframe(indval_res, use_container_width=True)
+                                        
+                                        st.info("💡 **Interpretación**: Un *IndVal* cercano a 100% significa que la especie es EXCLUSIVA de ese ambiente (Fidelidad alta) y siempre está PRESENTE en él (Especificidad alta). Valores mayores al 25% suelen considerarse bioindicadores robustos.")
+                                        
+                                        # Gráfico simple de barras de top 10 IndVal
+                                        top_n = indval_res.head(15)
+                                        fig_ind = px.bar(top_n, x="Especie", y="IndVal (%)", color="Asociación / Grupo",
+                                                        title="Especies más Biológicamente Indicadoras (Top 15)",
+                                                        text="IndVal (%)", template="plotly_white")
+                                        fig_ind.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+                                        fig_ind.update_layout(yaxis_range=[0, 110])
+                                        st.plotly_chart(fig_ind, use_container_width=True)
+                                    else:
+                                        st.warning("No se encontraron asociaciones de especies válidas.")
+                                except Exception as e:
+                                    st.error(f"Error procesando IndVal: {e}")
+                                    
                 with tab_corr:
                     st.subheader("Interacción entre Variables")
                     corr_matrix = StatsProEngine.calculate_correlation(num_df)
@@ -1055,7 +1099,7 @@ elif menu == "🧪 Diseño Experimental":
     method_type = st.radio("Tipo de Prueba", ["ANOVA (Paramétrica)", "Kruskal-Wallis / Friedman (No Paramétrica)"], horizontal=True)
     
     if "ANOVA" in method_type:
-        design_type = st.radio("Selecciona el Diseño", ["DCA", "DBCA", "Cuadro Latino"], horizontal=True)
+        design_type = st.radio("Selecciona el Diseño", ["DCA", "DBCA", "Cuadro Latino", "AxB Factorial", "Split-Plot"], horizontal=True)
     else:
         design_type = st.radio("Selecciona la Prueba", ["Kruskal-Wallis (Independientes)", "Friedman (Dependientes)"], horizontal=True)
 
@@ -1227,6 +1271,67 @@ elif menu == "🧪 Diseño Experimental":
                                 'res_col': r_col, 'fac_col': t_col
                             }
                             st.rerun()
+                            
+                    elif design_type in ["AxB Factorial", "Split-Plot"]:
+                        st.info("💡 **Dato**: Para estos diseños complejos, necesitas un formato largo (cada fila es una observación pura con sus columnas de clasificación correspondientes).")
+                        
+                        cols = exp_df.columns.tolist()
+                        res_col = st.selectbox("Variable Respuesta (Numérica):", cols, index=len(cols)-1)
+                        
+                        if design_type == "AxB Factorial":
+                            st.write("Selecciona los 2 Factores Principales (Ej. Especie y Fertilizante):")
+                            facA = st.selectbox("Factor A:", cols, index=0)
+                            facB = st.selectbox("Factor B:", cols, index=1 if len(cols) > 1 else 0)
+                            
+                            use_block = st.checkbox("¿El diseño tiene bloques?")
+                            blo_col = None
+                            if use_block:
+                                blo_col = st.selectbox("Columna de Bloque:", cols, index=2 if len(cols) > 2 else 0)
+                            
+                            factors = [facA, facB] if not use_block else [facA, facB, blo_col]
+                            
+                        elif design_type == "Split-Plot":
+                            st.write("Configuración de Parcelas:")
+                            facA = st.selectbox("Factor Principal (Parcela Mayor):", cols, index=0)
+                            blo_col = st.selectbox("Bloque (Repeticiones de P. Mayor):", cols, index=1 if len(cols) > 1 else 0)
+                            facB = st.selectbox("Sub-Factor (Parcela Menor):", cols, index=2 if len(cols) > 2 else 0)
+                            
+                            factors = [facA, blo_col, facB]
+                        
+                        if st.button(f"🚀 Ejecutar ANOVA ({design_type})"):
+                            # Limpieza de datos
+                            long_df = exp_df.copy()
+                            if long_df[res_col].dtype == object:
+                                long_df[res_col] = long_df[res_col].astype(str).str.replace(',', '.', regex=True)
+                            long_df[res_col] = pd.to_numeric(long_df[res_col], errors='coerce')
+                            long_df = long_df.dropna(subset=[res_col])
+                            
+                            tab, mod = ExperimentalEngine.run_anova(long_df, res_col, factors, design=design_type)
+                            exp_metrics = ExperimentalEngine.calculate_experimental_metrics(long_df, mod, res_col)
+                            
+                            grouping_df, tukey_df = None, pd.DataFrame()
+                            try:
+                                # Tukey para el Factor A como muestra exploratoria
+                                grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, facA)
+                            except:
+                                pass
+                                
+                            summary_text = f"### 💡 Análisis {design_type} ejecutado\nPor favor revise el desglose de interacciones y errores experimentales en el reporte técnico inferior para dictaminar la hipótesis correctamente de los efectos principales y su interacción combinada."
+                            
+                            # Gráfico de interacción (Medias marginales)
+                            grouped = long_df.groupby([facA, facB], as_index=False)[res_col].mean()
+                            fig_c = px.line(grouped, x=facA, y=res_col, color=facB, markers=True, 
+                                           title=f"Gráfico de Interacción ({facA} x {facB})", template="plotly_white")
+                            fig_c.update_traces(line=dict(width=2), marker=dict(size=10))
+                            
+                            st.session_state.exp_results = {
+                                'tab': tab, 'metrics': exp_metrics, 'fig': fig_c,
+                                'summary': summary_text, 'tukey_df': tukey_df,
+                                'grouping_df': grouping_df,
+                                'power': "No disponible para efectos anidados", 'design': design_type,
+                                'res_col': res_col, 'fac_col': facA
+                            }
+                            st.rerun()
                 else:
                     st.warning("Para pruebas no paramétricas también usaremos el formato ancho.")
                     if st.button(f"🚀 Ejecutar {design_type}"):
@@ -1364,6 +1469,78 @@ elif menu == "🧪 Diseño Experimental":
         pwr_val = res.get('power', 0)
         st.write(f"**Análisis de Potencia Real ($1-\\beta$):** `{pwr_val:.2f}`")
         st.caption("💡 La potencia estadística indica la probabilidad de detectar diferencias reales si existen. Un valor ≥ 0.80 es el estándar científico; valores menores sugieren que el tamaño de muestra es pequeño o la variabilidad es muy alta (Riesgo de Error Tipo II).")
+
+        # 8. Exportación Estructurada de Memoria Técnica
+        st.divider()
+        st.subheader("📑 Guardar Memoria Técnica")
+        st.write("Génere un documento estructural con todo el reporte analítico (Tablas, Métricas y Explicación). **Tip Pro:** Puedes abrir el archivo descargado en tu navegador para imprimirlo como PDF nativo, o abrirlo directamente con **Microsoft Word** para que lo convierta en texto editable y tablas oficiales.")
+        
+        # Generador dinámico de reporte HTML compatible con procesadores de texto
+        anova_html = anova_fmt.to_html(index=True, border=1, justify="center")
+        
+        html_content = f"""
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>Memoria Técnica: ECOMETRICS</title>
+            <style>
+                body {{ font-family: 'Arial', sans-serif; padding: 20px; line-height: 1.6; color: #212121; max-width: 900px; margin: auto; }}
+                h1 {{ color: #2e7d32; border-bottom: 3px solid #2e7d32; padding-bottom: 10px; }}
+                h2 {{ color: #1565c0; margin-top: 30px; font-size: 1.3rem; border-bottom: 1px solid #ccc; }}
+                table {{ border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 0.95rem; }}
+                th, td {{ border: 1px solid #999; padding: 10px; text-align: left; }}
+                th {{ background-color: #f2f2f2; color: #333; }}
+                .summary {{ background-color: #f9f9f9; border-left: 5px solid #2e7d32; padding: 15px; margin-bottom: 20px; font-size: 1.05rem; }}
+            </style>
+        </head>
+        <body>
+            <h1>Memoria Técnica de Análisis Biomátrico - ECOMETRICS</h1>
+            <p><strong>Modelo Ejecutivo:</strong> {res.get('design', 'Análisis Genérico')}</p>
+            <p><strong>Variable Respuesta Objetiva:</strong> {res.get('res_col', 'N/A')}</p>
+            
+            <h2>1. Exploración Métrica (Componentes de Varianza)</h2>
+            <ul>
+                <li><strong>Factor de Corrección (FC):</strong> {res['metrics'].get('FC', 0):.4f}</li>
+                <li><strong>Sumatoria Total (ΣY):</strong> {res['metrics'].get('Sumatoria', 0):.2f}</li>
+                <li><strong>Coeficiente de Variación (CV):</strong> {res['metrics'].get('CV', 0):.2f}%</li>
+                <li><strong>Precisión Explicativa (R²):</strong> {res['metrics'].get('R2', 0):.4f}</li>
+            </ul>
+            
+            <h2>2. Diagnóstico Inteligente y Decisiones de Hipótesis</h2>
+            <div class="summary">
+                {res.get('summary', 'Sin dictamen textual.').replace(chr(10), '<br>')}
+            </div>
+            
+            <h2>3. Cuadro de Análisis de Varianza Académico (ANOVA)</h2>
+            {anova_html}
+            
+        """
+        
+        if res.get('grouping_df') is not None and not res['grouping_df'].empty:
+            grouping_html = res['grouping_df'].to_html(index=False, border=1, justify="center")
+            html_content += f"""
+            <h2>4. Conformidad de Grupos (Clasificador de Diferencias)</h2>
+            <p>Grupos que comparten la misma letra en su categorización tienen medias estadísticamente idénticas bajo un contraste con un nivel de significancia de α=0.05.</p>
+            {grouping_html}
+            """
+            
+        html_content += """
+        <br><br>
+        <p style="font-size: 0.8rem; color: #666; border-top: 1px solid #ccc; padding-top: 10px;">
+        Documento científico generado e interpretado algorítmicamente mediante <strong>ECOMETRICS</strong> (<em>Biochavezforester</em>).
+        </p>
+        </body>
+        </html>
+        """
+        
+        st.download_button(
+            label="💾 Descargar Memoria (.HTML / MS Word)",
+            data=html_content,
+            file_name=f"MemoriaTecnica_Ecometrics_{res.get('design', 'Analisis')}.html",
+            mime="text/html",
+            type="primary",
+            use_container_width=True
+        )
 
         if st.button("🧹 Limpiar Reporte y Nueva Carga", use_container_width=True):
             st.session_state.exp_results = None

@@ -40,6 +40,59 @@ class StatsProEngine:
         distances = pdist(community_matrix, metric=method if method != 'braycurtis' else 'braycurtis')
         return pd.DataFrame(squareform(distances), index=community_matrix.index, columns=community_matrix.index)
 
+    @staticmethod
+    def run_indval(community_matrix, site_groups):
+        """
+        Calcula el Valor Indicador (IndVal) de Dufrêne & Legendre (1997).
+        Devuelve DataFrame ordenado con Especies, Grupos e IndVal score.
+        """
+        import pandas as pd
+        import numpy as np
+        
+        # Aseguramos que site_groups sea un dict mapeable
+        if isinstance(site_groups, pd.Series):
+            site_groups = site_groups.to_dict()
+            
+        groups = np.unique(list(site_groups.values()))
+        
+        cm = community_matrix.copy()
+        cm['__Group__'] = cm.index.map(site_groups)
+        
+        results = []
+        
+        for sp in community_matrix.columns:
+            if sp == '__Group__': continue
+            
+            # Promedio de abundancia por sitio dentro de cada grupo
+            mean_abund = cm.groupby('__Group__')[sp].mean()
+            sum_mean_abund = mean_abund.sum()
+            
+            # Conteo de presencias (abundancia > 0)
+            presence = cm[sp] > 0
+            count_pres = presence.groupby(cm['__Group__']).sum()
+            n_sites = cm.groupby('__Group__').size()
+            
+            for g in groups:
+                A = mean_abund.get(g, 0) / sum_mean_abund if sum_mean_abund > 0 else 0
+                B = count_pres.get(g, 0) / n_sites.get(g, 1)
+                
+                indval = A * B * 100
+                
+                if indval > 0:
+                     results.append({
+                         "Especie": sp,
+                         "Asociación / Grupo": g,
+                         "Especificidad (A)": round(A, 4),
+                         "Fidelidad (B)": round(B, 4),
+                         "IndVal (%)": round(indval, 2)
+                     })
+                     
+        df_indval = pd.DataFrame(results)
+        if not df_indval.empty:
+            df_indval = df_indval.sort_values(by="IndVal (%)", ascending=False).reset_index(drop=True)
+             
+        return df_indval
+
 class ExperimentalEngine:
     """
     Motor para diseños experimentales y pruebas de hipótesis.
@@ -163,9 +216,37 @@ class ExperimentalEngine:
             formula = "__Y__ ~ C(__F1__) + C(__F2__)"
         elif design == "Latino":
             formula = "__Y__ ~ C(__F1__) + C(__F2__) + C(__F3__)"
+        elif design == "AxB Factorial":
+            if len(factors) == 2:
+                formula = "__Y__ ~ C(__F1__) * C(__F2__)"
+            else:
+                # factors[2] asume bloque
+                formula = "__Y__ ~ C(__F3__) + C(__F1__) * C(__F2__)"
+        elif design == "Split-Plot":
+            # F1: Parcela Mayor, F2: Bloque, F3: Parcela Menor
+            # Modelo = Bloque + A + Error(A) + B + AB + Error(B)
+            # Error(A) matemáticamente es F1:F2 (A*Bloque)
+            formula = "__Y__ ~ C(__F2__) + C(__F1__) + C(__F1__):C(__F2__) + C(__F3__) + C(__F1__):C(__F3__)"
         
         model = ols(formula, data=df_sec).fit()
         anova_table = sm.stats.anova_lm(model, typ=2)
+        
+        if design == "Split-Plot":
+            try:
+                import scipy.stats as stats
+                error_a_idx = "C(__F1__):C(__F2__)"
+                
+                ms_error_a = anova_table.loc[error_a_idx, 'sum_sq'] / anova_table.loc[error_a_idx, 'df']
+                ms_A = anova_table.loc['C(__F1__)', 'sum_sq'] / anova_table.loc['C(__F1__)', 'df']
+                
+                new_f_A = ms_A / ms_error_a
+                new_p_A = stats.f.sf(new_f_A, anova_table.loc['C(__F1__)', 'df'], anova_table.loc[error_a_idx, 'df'])
+                
+                anova_table.loc['C(__F1__)', 'F'] = new_f_A
+                anova_table.loc['C(__F1__)', 'PR(>F)'] = new_p_A
+            except:
+                pass
+
         
         # 3.5 Si se aplicó método de Yates, reducir 1 grado de libertad del Error
         if yates_applied and "Residual" in anova_table.index:
@@ -181,9 +262,30 @@ class ExperimentalEngine:
             new_idx = idx
             for v, k in rev_mapping.items():
                 new_idx = new_idx.replace(v, k)
+            
+            # Limpieza cosmética de interacciones extrañas de StatsModels
+            new_idx = new_idx.replace("C(", "").replace(")", "")
+            
+            # Etiqueta especial de Split-Plot
+            if design == "Split-Plot":
+                pm = rev_mapping.get("__F1__", "Mayor")
+                blo = rev_mapping.get("__F2__", "Bloque")
+                pmn = rev_mapping.get("__F3__", "Menor")
+                
+                if new_idx == pm: new_idx = f"Parcela Mayor ({pm})"
+                elif new_idx == blo: new_idx = f"Bloque ({blo})"
+                elif new_idx == f"{pm}:{blo}": new_idx = "Error (a)"
+                elif new_idx == pmn: new_idx = f"Parcela Menor ({pmn})"
+                elif new_idx == f"{pm}:{pmn}": new_idx = f"Interacción ({pm} x {pmn})"
+                elif new_idx == "Residual": new_idx = "Error (b) Residual"
+                
             index_mapping[idx] = new_idx
             
         anova_table.rename(index=index_mapping, inplace=True)
+        
+        # Limpieza Adicional para Factorial
+        if design == "AxB Factorial":
+            anova_table.index = [str(i).replace(":", " x ") for i in anova_table.index]
         
         return anova_table, model
 
