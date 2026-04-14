@@ -148,13 +148,13 @@ with st.sidebar:
         "Navegación del Ecosistema",
         [
             "🏠 Dashboard Principal",
-            "🌿 Biodiversidad y Curvas",
+            "🌿 Evaluación de muestreo",
             "📊 Comparación (Hutcheson)",
             "🌲 Silvicultura e Inventarios",
-            "🔬 Bioestadística Pro",
+            "🔬 Evaluación de variables",
             "🧪 Diseño Experimental",
-            "📈 Modelos y Regresión",
-            "🧩 Análisis Multivariado",
+            "📈 Modelos y Regresón",
+            "🧩 PCA y NMDS",
             "📖 Acerca de ECOMETRICS",
             "⚠️ Aviso Legal"
         ]
