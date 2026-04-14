@@ -1251,6 +1251,10 @@ elif menu == "🧪 Diseño Experimental":
         st.markdown("---")
         st.header(f"📊 Reporte Técnico de Diseño Experimental ({res.get('design', 'Análisis')})")
         
+        if hasattr(res.get('mod'), 'yates_info') and res.get('mod').yates_info is not None:
+            yi = res.get('mod').yates_info
+            st.warning(f"🔍 **Ajuste de Yates Aplicado (Dato Perdido)**: Se estimó matemáticamente un dato faltante ($X = {yi['val']:.4f}$) para el **{yi['trat_name']} '{yi['trat_val']}'** en el **{yi['bloq_name']} '{yi['bloq_val']}'**. Se han reducido automáticamente (-1) los grados de libertad del Total y Residual para retener el rigor del análisis ANOVA.")
+        
         # 1. Diagnóstico de Hipótesis y Decisión (NUEVO / EXIGIDO)
         st.subheader("🎯 Diagnóstico de Hipótesis (H0)")
         

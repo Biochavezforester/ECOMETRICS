@@ -105,6 +105,55 @@ class ExperimentalEngine:
         
         # 2. Asegurar limpieza absoluta de la respuesta
         df_sec["__Y__"] = pd.to_numeric(df_sec["__Y__"], errors='coerce').astype(float)
+        
+        # -----------------------------------------------------
+        # IMPLEMENTACIÓN DE ESTIMACIÓN DE DATOS PERDIDOS (YATES)
+        # -----------------------------------------------------
+        missing_mask = df_sec["__Y__"].isna()
+        n_missing = missing_mask.sum()
+        
+        yates_applied = False
+        yates_info = None
+        
+        if n_missing == 1 and design == "DBCA":
+            try:
+                # Identificar el registro con el valor faltante
+                missing_idx = df_sec[missing_mask].index[0]
+                
+                trat_missing = df_sec.loc[missing_idx, "__F1__"] # Tratamiento
+                bloq_missing = df_sec.loc[missing_idx, "__F2__"] # Bloque
+                
+                # 't' y 'r' son el número total de tratamientos y bloques en el diseño
+                t_count = len(df_sec["__F1__"].unique())
+                r_count = len(df_sec["__F2__"].unique())
+                
+                # T = Suma del tratamiento donde está el dato perdido
+                T_sum = df_sec.loc[df_sec["__F1__"] == trat_missing, "__Y__"].dropna().sum()
+                # B = Suma del bloque donde está el dato perdido
+                B_sum = df_sec.loc[df_sec["__F2__"] == bloq_missing, "__Y__"].dropna().sum()
+                # G = Gran total de todos los datos válidos
+                G_sum = df_sec["__Y__"].dropna().sum()
+                
+                # Fórmula matemática de Yates: X = (r*B + t*T - G) / ((r-1)*(t-1))
+                X = (r_count * B_sum + t_count * T_sum - G_sum) / ((r_count - 1) * (t_count - 1))
+                
+                # Imputar dato
+                df_sec.loc[missing_idx, "__Y__"] = X
+                yates_applied = True
+                
+                # Guardar info original para mostrar en UI
+                rev_mapping_tmp = {v: k for k, v in mapping.items()}
+                yates_info = {
+                    "val": X,
+                    "trat_name": rev_mapping_tmp.get("__F1__", "Tratamiento"),
+                    "trat_val": trat_missing,
+                    "bloq_name": rev_mapping_tmp.get("__F2__", "Bloque"),
+                    "bloq_val": bloq_missing
+                }
+            except Exception as e:
+                pass # Si ocurre error numérico, se rinde y dropea
+                
+        # Remueve cualquier otro NA restante (o si no se aplicó Yates)
         df_sec.dropna(subset=["__Y__"], inplace=True)
         
         # 3. Construcción de fórmula con nombres seguros
@@ -117,6 +166,12 @@ class ExperimentalEngine:
         
         model = ols(formula, data=df_sec).fit()
         anova_table = sm.stats.anova_lm(model, typ=2)
+        
+        # 3.5 Si se aplicó método de Yates, reducir 1 grado de libertad del Error
+        if yates_applied and "Residual" in anova_table.index:
+            anova_table.loc["Residual", "df"] -= 1
+            # Pasar la info al objeto modelo para la Interfaz Web
+            model.yates_info = yates_info
         
         # 4. Restaurar nombres originales en los índices de la tabla ANOVA para el reporte
         rev_mapping = {v: k for k, v in mapping.items()}
