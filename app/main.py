@@ -1452,13 +1452,34 @@ elif menu == "📖 Acerca de ECOMETRICS":
     - **Estimadores Asintóticos**: Uso del estimador no paramétrico **Chao 1** para proyectar la riqueza potencial.
     - **Estandarización por Cobertura**: Permite comparar comunidades con diferentes esfuerzos de muestreo de manera justa.
 
-    ---
-    ### 📄 Cita Sugerida y Resumen (Para Publicaciones)
-    Si utilizas **ECOMETRICS** en tu investigación, puedes basarte en el siguiente fragmento para tu sección de *Métodos*:
+    """)
     
-    > "Los datos de biodiversidad fueron analizados utilizando la plataforma bioestadística **ECOMETRICS v1.2 (Chavez Gurrola, 2026)**. La riqueza de especies y la completitud del inventario se evaluaron mediante modelos de rarefacción y extrapolación analítica basados en individuos, utilizando el estimador asintótico Chao1 para proyectar la diversidad potencial y estandarizar la comparación bajo el framework iNEXT."
-
-    ---
+    st.divider()
+    
+    # SECCIÓN PREMIUM DE CITA OFICIAL CON ESTILO
+    st.markdown("""
+    <div style="display: flex; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
+      <span style="background-color: #e8f5e9; color: #1b5e20; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; border: 1px solid #1b5e20; letter-spacing: 0.5px;">PUBLICACIÓN OFICIAL 2026</span>
+      <h3 style="margin: 0; margin-left: 15px; color: #1b5e20; font-family: 'Outfit', sans-serif; font-size: 1.4rem;">Citar este Software</h3>
+    </div>
+    <p style="color: #444; font-family: 'Inter', sans-serif; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.2rem;">
+    Si utilizas ECOMETRICS en tu investigación científica o consultoría técnica, te pedimos que cites la plataforma utilizando el siguiente formato oficial para asegurar el rigor académico y el reconocimiento del software.
+    </p>
+    <div style="background-color: #f7f9f7; border-left: 4px solid #2e7d32; padding: 1.2rem; border-radius: 8px; margin-bottom: 1.5rem; font-family: 'Inter', sans-serif; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+      <b style="color: #212121; font-size: 1.05rem;">Chavez Gurrola, E. E. (2026).</b> <i style="color: #555;">ECOMETRICS: Suite Bioestadística y Biométrica Avanzada [Computer software].</i><br>
+      <a href="https://doi.org/10.5281/zenodo.19557761" style="color: #212121; text-decoration: none; font-weight: 500; font-size: 0.95rem; margin-top: 5px; display: inline-block;">https://doi.org/10.5281/zenodo.19557761</a>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_badge, col_btn, _ = st.columns([1.5, 2, 6])
+    with col_badge:
+        st.markdown("<div style='margin-top: 10px;'><a href='https://doi.org/10.5281/zenodo.19557761'><img src='https://zenodo.org/badge/DOI/10.5281/zenodo.19557761.svg' alt='DOI'></a></div>", unsafe_allow_html=True)
+    with col_btn:
+        st.link_button("🐈 Ver en GitHub", "https://github.com/Biochavezforester/ECOMETRICS", type="primary")
+        
+    st.divider()
+    
+    st.markdown("""
     #### 🔗 Enlaces Profesionales
     - **ORCID**: [0009-0007-7054-6999](https://orcid.org/0009-0007-7054-6999)
     - **ResearchGate**: [Perfil de Investigador](https://www.researchgate.net/profile/Erick-Elio-Chavez-Gurrola-2)
