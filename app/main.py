@@ -1288,14 +1288,16 @@ elif menu == "🧪 Diseño Experimental":
                  col_d1, col_d2 = st.columns([1, 2])
                  with col_d1:
                      dec_str = str(decision)
-                     if "Rechaza H0" in dec_str:
-                         st.error(f"### Decisión: {dec_str}")
+                     is_reject = "No Rechaza" not in dec_str and "Rechaza" in dec_str
+                     
+                     if is_reject:
+                         st.success(f"### Decisión: {dec_str}")
                      else:
-                         st.info(f"### Decisión: {dec_str}")
+                         st.error(f"### Decisión: {dec_str}")
                  
                  with col_d2:
                      st.write(f"**Justificación Estadística**:")
-                     st.markdown(f"Dado que el valor calculado **FCAL ({f_calc})** es **{'mayor' if 'Rechaza' in str(decision) else 'menor'}** que el valor crítico de tablas **FTAB ({f_tab})**, podemos concluir que existe evidencia suficiente para **{'RECHAZAR' if 'Rechaza' in str(decision) else 'NO RECHAZAR'}** la hipótesis nula ($H_0$) con un nivel de significancia del 5%.")
+                     st.markdown(f"Dado que el valor calculado **FCAL ({f_calc})** es **{'mayor' if is_reject else 'menor'}** que el valor crítico de tablas **FTAB ({f_tab})**, podemos concluir que **{'SÍ' if is_reject else 'NO'}** existe evidencia suficiente para RECHAZAR la hipótesis nula ($H_0$) con un nivel de significancia del 5%.")
                  st.markdown("<br>", unsafe_allow_html=True)
              except Exception as diag_err:
                  st.warning(f"⚠️ Nota: El diagnóstico detallado no pudo generarse automáticamente para {source} ({diag_err}).")
