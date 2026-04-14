@@ -14,13 +14,11 @@ if parent_dir not in sys.path:
 from modules.forestry_engine import ForestryEngine
 from modules.bio_engine import BiodiversityEngine
 from modules.stats_pro_v2 import StatsProEngine, ExperimentalEngine, AdvancedStatsEngine
-from modules.health_engine import HealthEngine
 from modules import interpretation_v3 as nlg
 from utils import templates_v2 as templates
 import modules.forestry_engine as forestry_engine
 import modules.bio_engine as bio_engine
 import modules.stats_pro_v2 as stats_pro
-import modules.health_engine as health_modules
 import modules.interpretation_v3 as nlg_module
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
@@ -157,7 +155,6 @@ with st.sidebar:
             "🧪 Diseño Experimental",
             "📈 Modelos y Regresión",
             "🧩 Análisis Multivariado",
-            "🛡️ Sanidad Forestal",
             "📖 Acerca de ECOMETRICS",
             "⚠️ Aviso Legal"
         ]
@@ -1049,74 +1046,6 @@ elif menu == "🧩 Análisis Multivariado":
                     
         except Exception as e:
             st.error(f"Error: {e}")
-
-# 7. SANIDAD FORESTAL
-elif menu == "🛡️ Sanidad Forestal":
-    st.header("🛡️ Sanidad y Protección Forestal")
-    st.markdown("*Evaluación de riesgos y salud del ecosistema.*")
-    
-    with st.expander("ℹ️ Guía de Datos de Campo", expanded=True):
-        st.info("""
-        **Datos Requeridos para Análisis**:
-        - **Arbol_ID**: Identificador único por individuo.
-        - **Especie**: Nombre científico (usado para vulnerabilidad).
-        - **Grado_Infestacion**: Escala 0-5 (0:Sano, 5:Crítico).
-        - **Agente_Causal**: Plaga o enfermedad detectada.
-        
-        **Resultado Esperado**:
-        El sistema genera un **Índice de Riesgo Combinado** (Clima + Vulnerabilidad) y clasifica el estado fitosanitario para priorizar intervenciones.
-        """)
-
-    from modules.health_engine import HealthEngine
-    from utils import templates_v2 as templates
-    with st.sidebar:
-        st.subheader("📂 Plantilla")
-        health_template = templates.create_health_template()
-        templates.render_download_button(health_template, "plantilla_sanidad_ecometrics.xlsx", "⬇️ Descargar Formato Sanidad")
-        
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.subheader("🌡️ Calculador de Riesgo Fitosanitario")
-        p_mm = st.slider("Precipitación Anual (mm)", 0, 2000, 600)
-        t_c = st.slider("Temperatura Media (°C)", -5, 45, 22)
-        vulner = st.slider("Vulnerabilidad de la Especie (1-10)", 1, 10, 5)
-        
-        risk = HealthEngine.assess_pest_risk(p_mm, t_c, vulner)
-        status, icon = HealthEngine.get_health_status(risk)
-        
-        st.metric("Índice de Riesgo", f"{risk:.1f}%", delta=status, delta_color="inverse")
-        st.markdown(f"### Estado: {icon} {status}")
-        
-    with col2:
-        st.subheader("🔍 Carga de Datos de Campo")
-        h_file = st.file_uploader("Subir Registros de Sanidad", type=["xlsx", "csv"], key="h_up")
-        if h_file:
-            try:
-                if h_file.name.endswith('.csv'): h_df = pd.read_csv(h_file)
-                else: h_df = pd.read_excel(h_file)
-                
-                st.success("¡Datos de sanidad cargados!")
-                
-                # Análisis de Campo
-                metrics = HealthEngine.calculate_phytosanitary_metrics(h_df)
-                
-                st.subheader("📊 Análisis de Campo Directo")
-                s1, s2, s3 = st.columns(3)
-                s1.metric("Incidencias", f"{metrics['Incidencia']:.1f}%")
-                s2.metric("Severidad Media", f"{metrics['Severidad']:.1f}%")
-                s3.metric("Índice Fitosanitario", f"{metrics['IFR']:.1f}")
-                
-                h_c1, h_c2 = st.columns(2)
-                h_c1.metric("Árboles Sanos", f"{metrics['N_Sanos']}")
-                h_c2.metric("Árboles Infestados", f"{metrics['N_Infestados']}")
-                
-                with st.expander("Ver detalle de registros de sanidad"):
-                    st.dataframe(h_df, use_container_width=True)
-                    
-            except Exception as e:
-                st.error(f"Error: {e}")
-        st.image("https://img.icons8.com/stickers/150/shield.png", width=150)
-        st.info("💡 **Consejo**: El riesgo aumenta con temperaturas >25°C y precipitaciones <400mm para coníferas.")
 
 # 5. DISEÑO EXPERIMENTAL
 elif menu == "🧪 Diseño Experimental":

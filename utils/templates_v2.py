@@ -60,17 +60,7 @@ def create_stats_wide_template():
     return pd.DataFrame(data)
 
 
-def create_health_template():
-    """Plantilla para Sanidad Forestal."""
-    data = {
-        "Sitio": ["S1", "S1", "S2"],
-        "Arbol_ID": [101, 102, 201],
-        "Especie": ["Pinus durangensis", "Pinus durangensis", "Pinus arizonica"],
-        "Grado_Infestacion": [3, 1, 5],
-        "Agente_Causal": ["Dendroctonus adjunctus", "Sano", "Dendroctonus adjunctus"],
-        "Estado": ["Activo", "Atendido", "Muerto"]
-    }
-    return pd.DataFrame(data)
+
 
 
 def create_dca_template():
