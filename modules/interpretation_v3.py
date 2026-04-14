@@ -61,38 +61,50 @@ class ExperimentalInterpretation:
         
         # 1. Datos del Experimento y Detección de Faltantes
         n_total = len(df)
-        n_trats = len(df['Tratamiento'].unique()) if 'Tratamiento' in df.columns else "N/A"
-        
-        # Detectar datos perdidos (NaN)
-        n_missing = df['Respuesta'].isna().sum() if 'Respuesta' in df.columns else 0
+        res_col = "Respuesta" if "Respuesta" in df.columns else df.columns[-1]
+        n_missing = df[res_col].isna().sum()
         n_valid = n_total - n_missing
         
         summary = f"## 📄 Resumen Científico del Experimento ({design_name})\n\n"
-        summary += f"Se analizó un diseño estadístico **{design_name}** con un total de **{n_total} unidades experimentales**. "
+        summary += f"Se analizó un modelo **{design_name}** con un total de **{n_total} unidades experimentales registradas**. "
         
         if n_missing > 0:
-            summary += f"⚠️ **Atención**: Se detectaron **{n_missing} datos perdidos** o nulos. El análisis se ejecutó con las **{n_valid} observaciones válidas** restantes. "
+            summary += f"⚠️ **Atención**: Se detectaron **{n_missing} datos perdidos/nulos**. El análisis estadístico ajustó automáticamente los grados de libertad para trabajar validamente con las **{n_valid} observaciones útiles** restantes. "
         
-        if n_trats != "N/A":
-            summary += f"Los datos están distribuidos en **{n_trats} tratamientos**. "
+        # Desglose dinámico de la estructura de datos
+        predictors = [col for col in df.columns if col != res_col and col.lower() not in ['repeticion', 'rep', 'id', 'muestras']]
+        distribution_texts = []
+        for p in predictors:
+            try:
+                 n_unique = df[p].nunique()
+                 if isinstance(p, str):
+                      distribution_texts.append(f"**{n_unique}** niveles de *{p}*")
+            except:
+                 pass
         
-        # 2. Análisis de Significancia
-        p_val = None
-        for idx in anova_table.index:
-            if "Tratamiento" in str(idx) or "C(Tratamiento)" in str(idx):
-                p_val = anova_table.loc[idx, "PR(>F)"]
-                break
+        if distribution_texts:
+            summary += f"Estructuralmente, el diseño se conforma por " + ", ".join(distribution_texts) + ". "
         
-        interpretation_sig = ""
+        # 2. Análisis de Significancia (Multi-Factor)
+        summary += f"\n\n### ⚖️ Dictamen de Significancia (ANOVA)\n"
+        
+        sources = [idx for idx in anova_table.index if str(idx).lower() not in ["residual", "total", "error", "error (a)", "error (b) residual", "error residual (sce)", "total (sct)"]]
+        
         anova_significant = False
-        if p_val is not None:
-            if p_val < 0.05:
-                anova_significant = True
-                interpretation_sig = "✅ **Se rechaza la hipótesis nula ($H_0$)**. Existen diferencias altamente significativas entre los tratamientos (p < 0.05). Esto indica que al menos uno de los tratamientos produce una respuesta distinta, validando la hipótesis de investigación."
-            else:
-                interpretation_sig = "❌ **No se rechaza la hipótesis nula ($H_0$)**. No se detectaron diferencias significativas (p > 0.05). Estadísticamente, los tratamientos se comportaron de manera similar y las variaciones observadas se deben al azar."
         
-        summary += f"\n\n### ⚖️ Análisis de Significancia\n{interpretation_sig}\n"
+        for source in sources:
+            try:
+                p_val = anova_table.loc[source, "PR(>F)"]
+                if pd.isna(p_val): continue
+                
+                if p_val < 0.05:
+                    anova_significant = True
+                    summary += f"- ✅ **Efecto {source}**: Existen diferencias **altamente significativas** ($p < 0.05$). Al menos uno de sus niveles produce una respuesta estadísticamente distinta, validando la hipótesis central para esta fuente de variación.\n"
+                else:
+                    summary += f"- ❌ **Efecto {source}**: **No significativo** ($p > 0.05$). Las variantes bajo este parámetro se comportaron estadísticamente de manera similar frente a la variable objetivo.\n"
+            except:
+                pass
+
         
         # 3. Detección de Paradoja ANOVA vs Tukey
         if anova_significant and tukey_df is not None:
