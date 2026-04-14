@@ -1471,11 +1471,7 @@ elif menu == "📖 Acerca de ECOMETRICS":
     </div>
     """, unsafe_allow_html=True)
     
-    col_badge, col_btn, _ = st.columns([1.5, 2, 6])
-    with col_badge:
-        st.markdown("<div style='margin-top: 10px;'><a href='https://doi.org/10.5281/zenodo.19557761'><img src='https://zenodo.org/badge/DOI/10.5281/zenodo.19557761.svg' alt='DOI'></a></div>", unsafe_allow_html=True)
-    with col_btn:
-        st.link_button("🐈 Ver en GitHub", "https://github.com/Biochavezforester/ECOMETRICS", type="primary")
+    st.markdown("<div style='margin-top: 10px; margin-bottom: 20px;'><a href='https://doi.org/10.5281/zenodo.19557761'><img src='https://zenodo.org/badge/DOI/10.5281/zenodo.19557761.svg' alt='DOI'></a></div>", unsafe_allow_html=True)
         
     st.divider()
     
