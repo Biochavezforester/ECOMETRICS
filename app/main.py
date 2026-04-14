@@ -179,7 +179,7 @@ if menu == "🏠 Dashboard Principal":
         st.warning("🔬 **Bioestadística Pro**\n\nCorrelaciones, ordenación y análisis de comunidades.")
 
 # 2. BIODIVERSIDAD Y CURVAS DE ACUMULACIÓN
-elif menu == "🌿 Biodiversidad y Curvas":
+elif menu == "🌿 Evaluación de muestreo":
     st.header("🌿 Biodiversidad y Curvas de Acumulación")
     
     with st.expander("ℹ️ Guía del Módulo: ¿Qué datos subir y qué obtendrás?", expanded=True):
@@ -769,7 +769,7 @@ elif menu == "🌲 Silvicultura e Inventarios":
             st.image("https://img.icons8.com/stickers/200/natural-food.png", width=200)
 
 # 4. BIOESTADÍSTICA PRO (Enabled)
-elif menu == "🔬 Bioestadística Pro":
+elif menu == "🔬 Evaluación de variables":
     st.header("🔬 Bioestadística Pro: Análisis Exploratorio")
     st.markdown("*Correlaciones, distribuciones y estadística descriptiva de variables ambientales.*")
     
@@ -937,7 +937,7 @@ elif menu == "🔬 Bioestadística Pro":
             st.error(f"❌ Error al procesar datos: {e}")
             st.exception(e) # Para debug
 # 5. ANÁLISIS MULTIVARIADO
-elif menu == "🧩 Análisis Multivariado":
+elif menu == "🧩 PCA y NMDS":
     st.header("🧩 Análisis Multivariado de Ecosistemas")
     st.markdown("""
     Este módulo permite visualizar la **similitud o diferencia** entre comunidades biológicas.
@@ -1366,7 +1366,7 @@ elif menu == "🧪 Diseño Experimental":
             st.rerun()
 
 # 6. MODELOS Y REGRESIÓN
-elif menu == "📈 Modelos y Regresión":
+elif menu == "📈 Modelos y Regresón":
     st.header("📈 Modelos Biométricos y Regresión")
     st.markdown("*Modelado predictivo, crecimiento y regresión avanzada.*")
     
