@@ -1254,30 +1254,39 @@ elif menu == "🧪 Diseño Experimental":
         # 1. Diagnóstico de Hipótesis y Decisión (NUEVO / EXIGIDO)
         st.subheader("🎯 Diagnóstico de Hipótesis (H0)")
         
-        # Extraer F-Calc y F-Tab de la fuente principal (Tratamiento)
         anova_fmt = ExperimentalEngine.format_anova_to_df(res['tab'])
-        # Buscar la fila de tratamiento (puede variar por diseño pero solemos poner SCTr)
-        trat_row = None
-        for idx in anova_fmt.index:
-            if "Tratamiento" in idx:
-                trat_row = anova_fmt.loc[idx]
-                break
         
-        if trat_row is not None:
-             # Si hay más de una fila que coincide (ej. Tratamiento y Tratamiento (SCTr)), tomar la primera
-             if hasattr(trat_row, "shape") and len(trat_row.shape) > 1:
-                 trat_row = trat_row.iloc[0]
+        # Identificar qué fuentes de variación evaluar
+        sources_to_check = []
+        design_str = res.get('design', '')
+        if design_str in ["DBCA", "Cuadro Latino"]:
+            for idx in anova_fmt.index:
+                idx_str = str(idx).lower()
+                if "error" not in idx_str and "residual" not in idx_str and "total" not in idx_str:
+                    sources_to_check.append(idx)
+        else:
+            for idx in anova_fmt.index:
+                if "Tratamiento" in str(idx) or "factor" in str(idx).lower():
+                    sources_to_check.append(idx)
+                    break
+        
+        if not sources_to_check:
+            st.warning("⚠️ No se encontraron fuentes de variación principales para el diagnóstico.")
+            
+        for source in sources_to_check:
+             source_row = anova_fmt.loc[source]
+             if hasattr(source_row, "shape") and len(source_row.shape) > 1:
+                 source_row = source_row.iloc[0]
                  
-             # Búsqueda ultra-robusta de métricas (por posición o nombre parcial)
              try:
-                 # Intentar obtener por nombre exacto, si no, usar posición fija basada en el formato estándar del motor
-                 f_calc = trat_row.get("FCAL (F-Calc)", trat_row.iloc[3] if len(trat_row) > 3 else "-")
-                 f_tab = trat_row.get("FTAB (0.05)", trat_row.iloc[4] if len(trat_row) > 4 else "-")
-                 decision = trat_row.get("Regla de Decisión", trat_row.iloc[6] if len(trat_row) > 6 else "Sin Decisión")
+                 f_calc = source_row.get("FCAL (F-Calc)", source_row.iloc[3] if len(source_row) > 3 else "-")
+                 f_tab = source_row.get("FTAB (0.05)", source_row.iloc[4] if len(source_row) > 4 else "-")
+                 decision = source_row.get("Regla de Decisión", source_row.iloc[6] if len(source_row) > 6 else "Sin Decisión")
                  
+                 # Elemento visual para la fuente
+                 st.markdown(f"**🔹 Efecto: {source}**")
                  col_d1, col_d2 = st.columns([1, 2])
                  with col_d1:
-                     # Forzar a string para evitar errores de comparación
                      dec_str = str(decision)
                      if "Rechaza H0" in dec_str:
                          st.error(f"### Decisión: {dec_str}")
@@ -1287,8 +1296,9 @@ elif menu == "🧪 Diseño Experimental":
                  with col_d2:
                      st.write(f"**Justificación Estadística**:")
                      st.markdown(f"Dado que el valor calculado **FCAL ({f_calc})** es **{'mayor' if 'Rechaza' in str(decision) else 'menor'}** que el valor crítico de tablas **FTAB ({f_tab})**, podemos concluir que existe evidencia suficiente para **{'RECHAZAR' if 'Rechaza' in str(decision) else 'NO RECHAZAR'}** la hipótesis nula ($H_0$) con un nivel de significancia del 5%.")
+                 st.markdown("<br>", unsafe_allow_html=True)
              except Exception as diag_err:
-                 st.warning(f"⚠️ Nota: El diagnóstico detallado no pudo generarse automáticamente ({diag_err}). Consulte la tabla ANOVA inferior.")
+                 st.warning(f"⚠️ Nota: El diagnóstico detallado no pudo generarse automáticamente para {source} ({diag_err}).")
 
         # 2. Resumen de Cálculo Manual
         st.subheader("⚙️ Componentes del Cálculo (Varianza)")
