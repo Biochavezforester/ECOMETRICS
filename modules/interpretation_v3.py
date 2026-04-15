@@ -92,16 +92,47 @@ class ExperimentalInterpretation:
         
         anova_significant = False
         
+        # Determinar si es un diseño con bloques para contextualizar la interpretación
+        is_blocked_design = design_name in ["DBCA", "Cuadro Latino"]
+        
+        # Detectar qué fuentes corresponden a bloques vs tratamientos
+        block_keywords = ["bloque", "fila", "columna", "block", "rep", "repeticion"]
+        
         for source in sources:
             try:
                 p_val = anova_table.loc[source, "PR(>F)"]
                 if pd.isna(p_val): continue
                 
+                source_lower = str(source).lower()
+                is_block_source = is_blocked_design and any(kw in source_lower for kw in block_keywords)
+                
                 if p_val < 0.05:
                     anova_significant = True
-                    summary += f"- ✅ **Efecto {source}**: Existen diferencias **altamente significativas** ($p < 0.05$). Al menos uno de sus niveles produce una respuesta estadísticamente distinta, validando la hipótesis central para esta fuente de variación.\n"
+                    if is_block_source:
+                        summary += (
+                            f"- ✅ **Bloque ({source})**: El efecto de bloqueo es **estadísticamente significativo** ($p < 0.05$). "
+                            f"Esto confirma que la decisión de incorporar bloques al diseño fue **correcta y necesaria**: existían diferencias ambientales o espaciales entre los bloques que, de no haberse controlado, habrían inflado el error experimental y sessgado los resultados de los tratamientos. "
+                            f"El diseño {design_name} fue eficiente para remover este ruido ambiental.\n"
+                        )
+                    else:
+                        summary += (
+                            f"- ✅ **Tratamiento ({source})**: Existen diferencias **significativas entre tratamientos** ($p < 0.05$). "
+                            f"Al menos uno de los tratamientos produce una respuesta estadísticamente distinta a los demás, lo que valida la hipótesis experimental central. "
+                            f"Se recomienda proceder con la prueba de comparación múltiple (Tukey HSD) para identificar qué pares de tratamientos difieren.\n"
+                        )
                 else:
-                    summary += f"- ❌ **Efecto {source}**: **No significativo** ($p > 0.05$). Las variantes bajo este parámetro se comportaron estadísticamente de manera similar frente a la variable objetivo.\n"
+                    if is_block_source:
+                        summary += (
+                            f"- ❌ **Bloque ({source})**: El efecto de bloqueo **no fue significativo** ($p > 0.05$). "
+                            f"Las unidades experimentales dentro de los distintos bloques respondieron de forma similar. "
+                            f"Esto sugiere que en este experimento la heterogeneidad ambiental fue baja; en un diseño futuro podría considerarse un **DCA (Diseño Completamente al Azar)** como alternativa más simple.\n"
+                        )
+                    else:
+                        summary += (
+                            f"- ❌ **Tratamiento ({source})**: **No significativo** ($p > 0.05$). "
+                            f"Los tratamientos evaluados no produjeron respuestas estadísticamente distintas entre sí bajo las condiciones de este experimento. "
+                            f"Se recomienda verificar el tamaño de muestra y la magnitud del efecto esperado antes de concluir la ausencia de efecto.\n"
+                        )
             except:
                 pass
 
