@@ -1139,10 +1139,6 @@ elif menu == "🧪 Diseño Experimental":
                     
                 st.dataframe(exp_df.head(), use_container_width=True)
                 
-                # Botón adicional para mostrar/ocultar resultados si ya se corrieron
-                if st.session_state.exp_results:
-                    st.info("💡 Los resultados se muestran en el dashboard de la izquierda.")
-                
                 cols = exp_df.columns.tolist()
                 
                 if "ANOVA" in method_type:
