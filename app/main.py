@@ -1195,10 +1195,17 @@ elif menu == "🧪 Diseño Experimental":
                     elif design_type == "DBCA":
                         # Detección automática de Bloque
                         auto_blo = "Bloque" if "Bloque" in cols else cols[0]
+                        n_bloques = exp_df[auto_blo].nunique() if auto_blo in exp_df.columns else "?"
                         
-                        st.success(f"✅ **Análisis de Bloque configurado**: '{auto_blo}'")
                         treatments = [c for c in cols if c != auto_blo and c.lower() not in ['repeticion', 'rep', 'id', 'muestras']]
-                        st.info(f"Tratamientos: {', '.join(treatments)}")
+                        
+                        st.success(f"✅ **Análisis DBCA configurado automáticamente**")
+                        
+                        cfg_c1, cfg_c2 = st.columns(2)
+                        with cfg_c1:
+                            st.info(f"🟦 **Bloques detectados** (`{auto_blo}`): **{n_bloques}** bloques\n\n*Niveles:* {', '.join([str(b) for b in exp_df[auto_blo].unique()]) if auto_blo in exp_df.columns else 'N/A'}")
+                        with cfg_c2:
+                            st.info(f"🟩 **Tratamientos detectados**: **{len(treatments)}** tratamientos\n\n*Niveles:* {', '.join(treatments)}")
                         
                         with st.expander("⚙️ Configuración Avanzada (Opcional)"):
                             blo_col_manual = st.selectbox("Cambiar Columna de Bloque", cols, index=cols.index(auto_blo))
