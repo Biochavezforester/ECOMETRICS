@@ -1219,9 +1219,16 @@ elif menu == "🧪 Diseño Experimental":
                             n_p_g = len(long_df) / n_g
                             pwr = ExperimentalEngine.run_power_analysis(n_g, n_p_g)
                             
-                            # Tukey HSD y Agrupamiento (SIEMPRE VISIBLE)
+                            # Tukey HSD y Agrupamiento de Tratamientos
                             grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, fac_col)
                             summary_text = nlg.ExperimentalInterpretation.generate_anova_summary(long_df, tab, exp_metrics, "DBCA", tukey_df=tukey_df, power=pwr)
+                            
+                            # Agrupamiento de Bloques
+                            try:
+                                block_grouping_df, _ = ExperimentalEngine.get_tukey_groups(long_df, res_col, auto_blo)
+                                block_grouping_df = block_grouping_df.rename(columns={'Tratamiento': 'Bloque'})
+                            except:
+                                block_grouping_df = None
                             
                             # Perfil de respuesta (Para bloques)
                             fig_exp = px.line(long_df, x=fac_col, y=res_col, color=auto_blo, markers=True, template="plotly_white")
@@ -1231,6 +1238,8 @@ elif menu == "🧪 Diseño Experimental":
                                 'tab': tab, 'metrics': exp_metrics, 'fig': fig_exp,
                                 'summary': summary_text, 'tukey_df': tukey_df,
                                 'grouping_df': grouping_df,
+                                'block_grouping_df': block_grouping_df,
+                                'blo_col': auto_blo,
                                 'power': pwr, 'design': "DBCA",
                                 'res_col': res_col, 'fac_col': fac_col
                             }
@@ -1431,7 +1440,7 @@ elif menu == "🧪 Diseño Experimental":
         st.subheader("📝 Tabla ANOVA Estándar")
         st.dataframe(anova_fmt, use_container_width=True)
         
-        # 5. RESULTADOS DE AGRUPACIÓN (TUKEY) - NUEVO / ESTILO PUBLICACIÓN
+        # 5. RESULTADOS DE AGRUPACIÓN (TUKEY) - ESTILO PUBLICACIÓN
         if res.get('grouping_df') is not None:
             st.divider()
             st.subheader("🧬 Agrupamiento de Tratamientos (Conectividad)")
@@ -1444,7 +1453,6 @@ elif menu == "🧪 Diseño Experimental":
                 st.caption("Nota: Medias que comparten la misma letra no presentan diferencias significativas entre sí (α=0.05).")
             
             with col_t2:
-                # Gráfico de Barras con Letras (Tipo imagen de ejemplo)
                 gdf = res['grouping_df']
                 fig_bar = px.bar(gdf, x='Tratamiento', y='Media', 
                                  error_y='Desv. Est.',
@@ -1452,17 +1460,45 @@ elif menu == "🧪 Diseño Experimental":
                                  color='Tratamiento',
                                  title="Comparación de Medias con Significación",
                                  template="plotly_white")
-                
                 fig_bar.update_traces(textposition='outside', 
                                       textfont_size=16,
                                       marker_line_color='black',
                                       marker_line_width=1.5)
-                
                 fig_bar.update_layout(showlegend=False, 
                                       yaxis_title=res.get('res_col', 'Respuesta'),
                                       xaxis_title=res.get('fac_col', 'Tratamiento'))
-                
                 st.plotly_chart(fig_bar, use_container_width=True)
+        
+        # 5b. AGRUPAMIENTO DE BLOQUES (solo DBCA)
+        if res.get('design') == 'DBCA' and res.get('block_grouping_df') is not None:
+            st.subheader(f"🟦 Agrupamiento de Bloques ({res.get('blo_col', 'Bloque')})")
+            st.caption("Muestra la media de respuesta por bloque. Un efecto de bloque significativo indica que el control ambiental fue efectivo.")
+            
+            col_b1, col_b2 = st.columns([1, 1.2])
+            bdf = res['block_grouping_df']
+            blo_x_col = 'Bloque' if 'Bloque' in bdf.columns else bdf.columns[0]
+            
+            with col_b1:
+                st.write("**Resumen de Medias por Bloque**")
+                st.dataframe(bdf, use_container_width=True)
+                st.caption("Bloques con la misma letra no difieren significativamente (α=0.05).")
+            
+            with col_b2:
+                fig_blo = px.bar(bdf, x=blo_x_col, y='Media',
+                                 error_y='Desv. Est.',
+                                 text='Grupo',
+                                 color=blo_x_col,
+                                 color_discrete_sequence=px.colors.sequential.Blues_r,
+                                 title="Respuesta Media por Bloque",
+                                 template="plotly_white")
+                fig_blo.update_traces(textposition='outside',
+                                      textfont_size=16,
+                                      marker_line_color='black',
+                                      marker_line_width=1.5)
+                fig_blo.update_layout(showlegend=False,
+                                      yaxis_title=res.get('res_col', 'Respuesta'),
+                                      xaxis_title=res.get('blo_col', 'Bloque'))
+                st.plotly_chart(fig_blo, use_container_width=True)
         
         # 6. Visualización Exploratoria
         with st.expander("📈 Ver Visualización de Distribución / Perfiles"):
