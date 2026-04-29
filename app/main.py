@@ -1277,12 +1277,29 @@ elif menu == "🧪 Diseño Experimental":
                             grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(exp_df, r_col, t_col, tab)
                             summary_text = nlg.ExperimentalInterpretation.generate_anova_summary(exp_df, tab, exp_metrics, "Cuadro Latino", tukey_df=tukey_df, power=pwr)
                             
+                            # Agrupamiento de Fila y Columna (Añadido para Cuadro Latino)
+                            try:
+                                row_grouping_df, _ = ExperimentalEngine.get_tukey_groups(exp_df, r_col, f_col, tab)
+                                row_grouping_df = row_grouping_df.rename(columns={'Tratamiento': f_col})
+                            except:
+                                row_grouping_df = None
+                            
+                            try:
+                                col_grouping_df, _ = ExperimentalEngine.get_tukey_groups(exp_df, r_col, c_col, tab)
+                                col_grouping_df = col_grouping_df.rename(columns={'Tratamiento': c_col})
+                            except:
+                                col_grouping_df = None
+                            
                             fig_lat = px.scatter(exp_df, x=c_col, y=f_col, size=r_col, color=t_col, title="Distribución de Tratamientos en el Cuadro", template="plotly_white")
                             
                             st.session_state.exp_results = {
                                 'tab': tab, 'metrics': exp_metrics, 'fig': fig_lat,
                                 'summary': summary_text, 'tukey_df': tukey_df,
                                 'grouping_df': grouping_df,
+                                'row_grouping_df': row_grouping_df,
+                                'col_grouping_df': col_grouping_df,
+                                'f_col': f_col,
+                                'c_col': c_col,
                                 'power': pwr, 'design': "Cuadro Latino",
                                 'res_col': r_col, 'fac_col': t_col
                             }
@@ -1504,6 +1521,41 @@ elif menu == "🧪 Diseño Experimental":
                                       xaxis_title=res.get('blo_col', 'Bloque'))
                 st.plotly_chart(fig_blo, use_container_width=True)
         
+        # 5c. AGRUPAMIENTO DE FILAS Y COLUMNAS (solo Cuadro Latino)
+        if res.get('design') == 'Cuadro Latino':
+            for r_type, df_key, col_key, title_prefix, color_seq in [
+                ("Fila", "row_grouping_df", "f_col", "🟩", px.colors.sequential.Greens_r),
+                ("Columna", "col_grouping_df", "c_col", "🟧", px.colors.sequential.Oranges_r)
+            ]:
+                if res.get(df_key) is not None:
+                    st.subheader(f"{title_prefix} Agrupamiento de {r_type}s ({res.get(col_key, r_type)})")
+                    st.caption(f"Muestra la respuesta media por {r_type.lower()}. Útil si el factor resultó significativo en el ANOVA.")
+                    
+                    c1, c2 = st.columns([1, 1.2])
+                    df_rc = res[df_key]
+                    x_c = res.get(col_key, r_type)
+                    
+                    with c1:
+                        st.write(f"**Resumen de Medias por {r_type}**")
+                        st.dataframe(df_rc, use_container_width=True)
+                    
+                    with c2:
+                        fig_rc = px.bar(df_rc, x=x_c, y='Media',
+                                         error_y='Desv. Est.',
+                                         text='Grupo',
+                                         color=x_c,
+                                         color_discrete_sequence=color_seq,
+                                         title=f"Respuesta Media por {r_type}",
+                                         template="plotly_white")
+                        fig_rc.update_traces(textposition='outside',
+                                              textfont_size=16,
+                                              marker_line_color='black',
+                                              marker_line_width=1.5)
+                        fig_rc.update_layout(showlegend=False,
+                                              yaxis_title=res.get('res_col', 'Respuesta'),
+                                              xaxis_title=x_c)
+                        st.plotly_chart(fig_rc, use_container_width=True)
+
         # 6. Visualización Exploratoria
         with st.expander("📈 Ver Visualización de Distribución / Perfiles"):
             st.plotly_chart(res['fig'], use_container_width=True)
