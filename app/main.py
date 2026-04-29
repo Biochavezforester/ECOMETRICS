@@ -20,6 +20,10 @@ import modules.forestry_engine as forestry_engine
 import modules.bio_engine as bio_engine
 import modules.stats_pro_v2 as stats_pro
 import modules.interpretation_v3 as nlg_module
+
+import importlib
+importlib.reload(stats_pro)
+from modules.stats_pro_v2 import StatsProEngine, ExperimentalEngine, AdvancedStatsEngine
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
     page_title="ECOMETRICS | Suite Bioestadística para Monitoreo Ecológico",
