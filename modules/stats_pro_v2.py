@@ -290,10 +290,11 @@ class ExperimentalEngine:
         return anova_table, model
 
     @staticmethod
-    def run_posthoc(df, response, factor):
+    def run_posthoc(df, response, factor, anova_table=None):
         """Prueba de Tukey HSD."""
-        from statsmodels.stats.multicomp import pairwise_tukeyhsd
-        return pairwise_tukeyhsd(endog=df[response], groups=df[factor], alpha=0.05)
+        # Se redirige a la nueva implementación robusta
+        _, tukey_df = ExperimentalEngine.get_tukey_groups(df, response, factor, anova_table)
+        return tukey_df
 
     @staticmethod
     def format_tukey_to_df(tukey_result):
@@ -321,11 +322,10 @@ class ExperimentalEngine:
         return df_res
 
     @staticmethod
-    def get_tukey_groups(df, response, factor):
+    def get_tukey_groups(df, response, factor, anova_table=None):
         """Genera agrupaciones por letras (a, ab, b) usando el algoritmo de conectividad de medias."""
         import pandas as pd
         import numpy as np
-        from statsmodels.stats.multicomp import pairwise_tukeyhsd
         
         # 1. Calcular estadísticos descriptivos por tratamiento
         stats_df = df.groupby(factor)[response].agg(['mean', 'std', 'count']).sort_values('mean', ascending=False)
@@ -334,11 +334,57 @@ class ExperimentalEngine:
         n = len(trats)
         
         # 2. Prueba de Tukey (Obtener matriz de rechazos)
-        tukey = pairwise_tukeyhsd(df[response], df[factor], alpha=0.05)
+        # Buscar MSE y DF del Error si se provee una tabla ANOVA (para DBCA, Latino, etc)
+        mse = None
+        df_error = None
+        
+        if anova_table is not None:
+            # Buscar la fila de residuales
+            res_key = next((k for k in anova_table.index if "Residual" in str(k) or "Error" in str(k)), None)
+            if res_key:
+                df_error = anova_table.loc[res_key, 'df']
+                mse = anova_table.loc[res_key, 'sum_sq'] / df_error
+        
+        tukey_sum = None
+        
+        if mse is not None and df_error is not None:
+            # Implementación manual avanzada de Tukey (Aisla el ruido de los bloques)
+            from statsmodels.stats.multicomp import tukeyhsd
+            groupsunique = np.unique(df[factor])
+            
+            gmeans, gnobs = [], []
+            for g in groupsunique:
+                g_data = df[df[factor] == g][response].dropna()
+                gmeans.append(g_data.mean())
+                gnobs.append(len(g_data))
+                
+            res = tukeyhsd(np.array(gmeans), np.array(gnobs), mse, df=df_error, alpha=0.05)
+            idx1, idx2 = res[0]
+            reject = res[1]
+            meandiffs = res[2]
+            confint = res[4]
+            pvals = res[8]
+            
+            resarr = []
+            for i in range(len(idx1)):
+                resarr.append({
+                    "group1": groupsunique[idx1[i]],
+                    "group2": groupsunique[idx2[i]],
+                    "meandiff": meandiffs[i],
+                    "p-adj": pvals[i],
+                    "lower": confint[i][0],
+                    "upper": confint[i][1],
+                    "reject": reject[i]
+                })
+            tukey_sum = pd.DataFrame(resarr)
+        else:
+            # Fallback a Tukey básico (DCA o sin tabla ANOVA)
+            from statsmodels.stats.multicomp import pairwise_tukeyhsd
+            tukey = pairwise_tukeyhsd(df[response], df[factor], alpha=0.05)
+            tukey_sum = pd.DataFrame(tukey.summary().data[1:], columns=tukey.summary().data[0])
         
         # Matriz de adyacencia (Significancia)
         adj_matrix = pd.DataFrame(False, index=trats, columns=trats)
-        tukey_sum = pd.DataFrame(tukey.summary().data[1:], columns=tukey.summary().data[0])
         for _, row in tukey_sum.iterrows():
             g1, g2 = row['group1'], row['group2']
             rej = row['reject'] == True or str(row['reject']).lower() == 'true'
@@ -378,7 +424,20 @@ class ExperimentalEngine:
             "Grupo": [res_letters[t] for t in trats]
         })
         
-        return res_df, ExperimentalEngine.format_tukey_to_df(tukey)
+        # Convertir nombres del DataFrame de Tukey
+        traduccion = {
+            "group1": "Grupo A",
+            "group2": "Grupo B",
+            "meandiff": "Diferencia de Medias",
+            "p-adj": "p-valor (adj)",
+            "lower": "IC Inferior (95%)",
+            "upper": "IC Superior (95%)",
+            "reject": "Diferencia Significativa"
+        }
+        tukey_sum.rename(columns=traduccion, inplace=True)
+        tukey_sum["Diferencia Significativa"] = tukey_sum["Diferencia Significativa"].map({True: "SÍ ✅", False: "No ❌"})
+        
+        return res_df, tukey_sum
 
     @staticmethod
     def get_human_interpretation(tukey_df):

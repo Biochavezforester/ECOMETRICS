@@ -1173,7 +1173,7 @@ elif menu == "🧪 Diseño Experimental":
                             pwr = ExperimentalEngine.run_power_analysis(n_g, n_p_g)
                             
                             # Tukey HSD y Agrupamiento (SIEMPRE VISIBLE POR SOLICITUD DE USUARIO)
-                            grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, fac_col)
+                            grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, fac_col, tab)
                             summary_text = nlg.ExperimentalInterpretation.generate_anova_summary(long_df, tab, exp_metrics, "DCA", tukey_df=tukey_df, power=pwr)
                             
                             # Gráfico de cajas (Exploratorio)
@@ -1220,12 +1220,12 @@ elif menu == "🧪 Diseño Experimental":
                             pwr = ExperimentalEngine.run_power_analysis(n_g, n_p_g)
                             
                             # Tukey HSD y Agrupamiento de Tratamientos
-                            grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, fac_col)
+                            grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, fac_col, tab)
                             summary_text = nlg.ExperimentalInterpretation.generate_anova_summary(long_df, tab, exp_metrics, "DBCA", tukey_df=tukey_df, power=pwr)
                             
                             # Agrupamiento de Bloques
                             try:
-                                block_grouping_df, _ = ExperimentalEngine.get_tukey_groups(long_df, res_col, auto_blo)
+                                block_grouping_df, _ = ExperimentalEngine.get_tukey_groups(long_df, res_col, auto_blo, tab)
                                 block_grouping_df = block_grouping_df.rename(columns={'Tratamiento': 'Bloque'})
                             except:
                                 block_grouping_df = None
@@ -1270,7 +1270,7 @@ elif menu == "🧪 Diseño Experimental":
                             pwr = ExperimentalEngine.run_power_analysis(n_g, n_p_g)
                             
                             # Tukey HSD y Agrupamiento (SIEMPRE VISIBLE)
-                            grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(exp_df, r_col, t_col)
+                            grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(exp_df, r_col, t_col, tab)
                             summary_text = nlg.ExperimentalInterpretation.generate_anova_summary(exp_df, tab, exp_metrics, "Cuadro Latino", tukey_df=tukey_df, power=pwr)
                             
                             fig_lat = px.scatter(exp_df, x=c_col, y=f_col, size=r_col, color=t_col, title="Distribución de Tratamientos en el Cuadro", template="plotly_white")
@@ -1324,7 +1324,7 @@ elif menu == "🧪 Diseño Experimental":
                             grouping_df, tukey_df = None, pd.DataFrame()
                             try:
                                 # Tukey para el Factor A como muestra exploratoria
-                                grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, facA)
+                                grouping_df, tukey_df = ExperimentalEngine.get_tukey_groups(long_df, res_col, facA, tab)
                             except:
                                 pass
                                 
