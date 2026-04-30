@@ -50,6 +50,14 @@
    streamlit run app/main.py
    ```
 
+## 📈 Ejemplo de Uso
+
+1. Al abrir la aplicación, dirígete al módulo **"Silvicultura e Inventarios"**.
+2. Selecciona la pestaña de **Análisis de IVI**.
+3. Carga el archivo de prueba ubicado en la carpeta `data/test_ivi.csv`.
+4. Observa cómo el sistema calcula automáticamente las frecuencias, densidades y dominancias relativas, generando un informe estructural completo y los gráficos correspondientes.
+5. Puedes exportar los resultados a Excel utilizando el botón de descarga en la interfaz.
+
 ## 📖 Citación
 
 Si utilizas **ECOMETRICS** en tu investigación académica, por favor cítalo de la siguiente manera:

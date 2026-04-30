@@ -1,28 +1,26 @@
+import pytest
 from modules.bio_engine import BiodiversityEngine
 
-def test_engine():
-    # Dataset de prueba (Abundancias)
+def test_hill_numbers():
     data = [10, 5, 2, 1, 1, 1]
     
-    print("--- Probando ECOMETRICS Bio-Engine ---")
-    
-    # Pruebas de Números de Hill
     q0 = BiodiversityEngine.calculate_hill_numbers(data, q=0)
     q1 = BiodiversityEngine.calculate_hill_numbers(data, q=1)
     q2 = BiodiversityEngine.calculate_hill_numbers(data, q=2)
     
-    print(f"Riqueza (q=0): {q0} (Esperado: 6)")
-    print(f"Shannon Div (q=1): {q1:.2f}")
-    print(f"Simpson Div (q=2): {q2:.2f}")
-    
-    # Prueba de Chao1
+    assert q0 == 6
+    assert q1 > 0
+    assert q2 > 0
+    assert q0 >= q1 >= q2  # Propiedad de los números de Hill
+
+def test_chao1_estimator():
+    data = [10, 5, 2, 1, 1, 1]
     chao1 = BiodiversityEngine.chao1_estimator(data)
-    print(f"Estimador Chao1: {chao1:.2f} (Esperado: 6.5 - asumiendo f1=3, f2=0 o similar)")
-    
-    # Prueba de Rarefacción (Mao Tau) para m=10 individuos
+    assert chao1 >= len(data)
+
+def test_rarefaction():
+    data = [10, 5, 2, 1, 1, 1]
     m = 10
     e_s = BiodiversityEngine.iNEXT_rarefaction(data, m)
-    print(f"Riqueza esperada para {m} individuos: {e_s:.2f}")
-
-if __name__ == "__main__":
-    test_engine()
+    assert e_s > 0
+    assert e_s <= len(data)
