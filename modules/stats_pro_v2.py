@@ -1,3 +1,15 @@
+import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+from statsmodels.stats.multicomp import tukeyhsd, pairwise_tukeyhsd
+from scipy import stats
+from scipy.spatial.distance import pdist, squareform
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.manifold import MDS
+
+
 class StatsProEngine:
     """
     Motor para análisis bioestadísticos avanzados.
@@ -16,9 +28,6 @@ class StatsProEngine:
     @staticmethod
     def run_pca(community_matrix):
         """Ejecuta Análisis de Componentes Principales (PCA)."""
-        from sklearn.decomposition import PCA
-        from sklearn.preprocessing import StandardScaler
-        
         # Escalamiento (importante para PCA)
         scaler = StandardScaler()
         scaled_data = scaler.fit_transform(community_matrix)
@@ -34,7 +43,6 @@ class StatsProEngine:
     @staticmethod
     def calculate_similarity(community_matrix, method='braycurtis'):
         """Calcula matriz de similitud/disimilitud."""
-        from scipy.spatial.distance import pdist, squareform
         
         # Nota: scikit-learn o scipy para distancias
         distances = pdist(community_matrix, metric=method if method != 'braycurtis' else 'braycurtis')
@@ -46,8 +54,6 @@ class StatsProEngine:
         Calcula el Valor Indicador (IndVal) de Dufrêne & Legendre (1997).
         Devuelve DataFrame ordenado con Especies, Grupos e IndVal score.
         """
-        import pandas as pd
-        import numpy as np
         
         # Aseguramos que site_groups sea un dict mapeable
         if isinstance(site_groups, pd.Series):
@@ -102,7 +108,6 @@ class ExperimentalEngine:
     @staticmethod
     def melt_wide_to_long(df, id_vars, value_name="Respuesta", var_name="Tratamiento"):
         """Convierte formato ancho a largo y asegura que la respuesta sea numérica."""
-        import pandas as pd
         melted = df.melt(id_vars=id_vars, var_name=var_name, value_name=value_name)
         
         # Forzar conversión numérica (maneja comas de Excel español y otros ruidos)
@@ -122,7 +127,6 @@ class ExperimentalEngine:
     @staticmethod
     def check_assumptions(df, response_col, group_col):
         """Valida normatividad y homocedasticidad."""
-        from scipy import stats
         
         # Normatividad (Shapiro-Wilk)
         shapiro_results = {}
@@ -144,9 +148,6 @@ class ExperimentalEngine:
         Ejecuta ANOVA con blindaje total. 
         Renombra internamente a nombres genéricos para evitar fallos de patsy/statsmodels.
         """
-        import statsmodels.api as sm
-        from statsmodels.formula.api import ols
-        import pandas as pd
         
         # 1. Crear copia y mapear a nombres internos seguros
         mapping = {response: "__Y__"}
@@ -233,7 +234,6 @@ class ExperimentalEngine:
         
         if design == "Split-Plot":
             try:
-                import scipy.stats as stats
                 error_a_idx = "C(__F1__):C(__F2__)"
                 
                 ms_error_a = anova_table.loc[error_a_idx, 'sum_sq'] / anova_table.loc[error_a_idx, 'df']
@@ -299,7 +299,6 @@ class ExperimentalEngine:
     @staticmethod
     def format_tukey_to_df(tukey_result):
         """Convierte el resultado de Tukey a un DataFrame elegante en español."""
-        import pandas as pd
         # Extraer datos del objeto SimpleTable
         data = tukey_result.summary().data
         df_res = pd.DataFrame(data[1:], columns=data[0])
@@ -324,8 +323,6 @@ class ExperimentalEngine:
     @staticmethod
     def get_tukey_groups(df, response, factor, anova_table=None):
         """Genera agrupaciones por letras (a, ab, b) usando el algoritmo de conectividad de medias."""
-        import pandas as pd
-        import numpy as np
         
         # 1. Calcular estadísticos descriptivos por tratamiento
         stats_df = df.groupby(factor)[response].agg(['mean', 'std', 'count']).sort_values('mean', ascending=False)
@@ -349,7 +346,6 @@ class ExperimentalEngine:
         
         if mse is not None and df_error is not None:
             # Implementación manual avanzada de Tukey (Aisla el ruido de los bloques)
-            from statsmodels.stats.multicomp import tukeyhsd
             groupsunique = np.unique(df[factor])
             
             gmeans, gnobs = [], []
@@ -379,7 +375,6 @@ class ExperimentalEngine:
             tukey_sum = pd.DataFrame(resarr)
         else:
             # Fallback a Tukey básico (DCA o sin tabla ANOVA)
-            from statsmodels.stats.multicomp import pairwise_tukeyhsd
             tukey = pairwise_tukeyhsd(df[response], df[factor], alpha=0.05)
             tukey_sum = pd.DataFrame(tukey.summary().data[1:], columns=tukey.summary().data[0])
         
@@ -463,9 +458,6 @@ class ExperimentalEngine:
         h = Shannon H', n = total individuos, s = número especies.
         Versión simplificada mediante expansión de Taylor (Aproximación Estándar).
         """
-        import numpy as np
-        from scipy import stats
-        
         # Aproximación de varianza (Taylor Series)
         v1 = (s1/n1 - (h1**2)/n1)
         v2 = (s2/n2 - (h2**2)/n2)
@@ -492,7 +484,6 @@ class ExperimentalEngine:
     @staticmethod
     def calculate_experimental_metrics(df, model, response_col):
         """Calcula métricas detalladas incluyendo componentes de cálculo manual corregidos (FC)."""
-        import numpy as np
         
         # Asegurar datos numéricos
         valid_y = df[response_col].dropna()
@@ -612,7 +603,6 @@ class ExperimentalEngine:
     @staticmethod
     def run_non_parametric(df, response, group, design="Kruskal"):
         """Pruebas No Paramétricas."""
-        from scipy import stats
         groups_data = [df[df[group] == g][response] for g in df[group].unique()]
         
         if design == "Kruskal":
@@ -631,7 +621,6 @@ class AdvancedStatsEngine:
     @staticmethod
     def run_regression(df, y_col, x_cols, model_type="Linear"):
         """Regresión Lineal y Logística."""
-        import statsmodels.api as sm
         X = sm.add_constant(df[x_cols])
         y = df[y_col]
         
@@ -663,7 +652,6 @@ class AdvancedStatsEngine:
     @staticmethod
     def run_nmds(community_matrix):
         """Escalamiento Multidimensional No Métrico."""
-        from sklearn.manifold import MDS
         nmds = MDS(n_components=2, metric=False, dissimilarity='precomputed', random_state=42)
         
         # Calcular distancias primero (Bray-Curtis por defecto)

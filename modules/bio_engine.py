@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
-from scipy.special import comb
+from scipy.special import comb, gammaln
+
+
 
 class BiodiversityEngine:
     """
@@ -62,7 +64,6 @@ class BiodiversityEngine:
         menhinick = s_obs / np.sqrt(n_total)
         
         # 6. Índice de Brillouin (Para muestras no aleatorias)
-        from scipy.special import gammaln
         # H = (ln(N!) - sum(ln(ni!))) / N
         ln_n_fact = gammaln(n_total + 1)
         ln_ni_fact_sum = np.sum(gammaln(abundances + 1))

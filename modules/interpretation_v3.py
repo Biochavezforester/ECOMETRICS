@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+
+
 """
 Módulo de interpretación científica para ECOMETRICS.
 """
@@ -56,8 +58,6 @@ class ExperimentalInterpretation:
     @staticmethod
     def generate_anova_summary(df, anova_table, metrics, design_name, tukey_df=None, power=None):
         """Genera un reporte científico detallado sobre el experimento."""
-        import pandas as pd
-        import numpy as np
         
         # 1. Datos del Experimento y Detección de Faltantes
         n_total = len(df)
@@ -184,7 +184,6 @@ class ExperimentalInterpretation:
     @staticmethod
     def generate_correlation_summary(corr_matrix):
         """Analiza la matriz de correlación y destaca relaciones fuertes."""
-        import pandas as pd
         
         summary = "### 🧠 Análisis de Interrelaciones (Correlación)\n"
         

@@ -97,7 +97,7 @@ class ForestryEngine:
                     elif 101 <= num_key <= 112:
                         p = ForestryEngine.GROUP_BETAS["G_101_112"]
                     else:
-                        p = ForestryEngine.SCIENTIFIC_SYSTEMS["2"] # Fallback: Pinus durangensis (ID 2)
+                        p = ForestryEngine.SCIENTIFIC_SYSTEMS["2"]  # Fallback: P. durangensis
                 except (ValueError, TypeError):
                     # 4. Fallback final taxonómico si falla todo lo anterior
                     if "pinus" in sp_lower:
@@ -107,7 +107,9 @@ class ForestryEngine:
                     else:
                         p = ForestryEngine.GENERIC_COEFFICIENTS["Generica_Conifera"]
         else:
-            p = ForestryEngine.GENERIC_COEFFICIENTS["Generica_Conifera"] if "Pinus" in str(species) else ForestryEngine.GENERIC_COEFFICIENTS["Generica_Latifoliada"]
+            is_pinus = "Pinus" in str(species)
+            p = (ForestryEngine.GENERIC_COEFFICIENTS["Generica_Conifera"] 
+                 if is_pinus else ForestryEngine.GENERIC_COEFFICIENTS["Generica_Latifoliada"])
             
         try:
             # Fórmula: V = b0 * D^b1 * H^b2
