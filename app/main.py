@@ -35,6 +35,11 @@ st.set_page_config(
 # --- ESTILO VISUAL PREMIUM "NATURE" ---
 st.markdown("""
 <style>
+    /* Ocultar elementos incómodos de Streamlit */
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+
     /* Tipografía y Colores Base */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@300;600&display=swap');
     
