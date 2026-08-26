@@ -32,6 +32,61 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+import streamlit.components.v1 as components
+components.html(
+    """
+    <script>
+    try {
+        if (!window.parent.document.getElementById('custom-sidebar-btn')) {
+            var btn = window.parent.document.createElement('button');
+            btn.id = 'custom-sidebar-btn';
+            btn.innerHTML = '☰ Abrir Menú';
+            btn.style.cssText = 'position: fixed; top: 15px; left: 15px; z-index: 999999; background: #2e7d32; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: none;';
+            btn.onclick = function() {
+                var doc = window.parent.document;
+                var btns = doc.querySelectorAll('button');
+                for (var i = 0; i < btns.length; i++) {
+                    var testid = btns[i].getAttribute('data-testid');
+                    if (testid === 'collapsedControl' || testid === 'stSidebarCollapsedControl' || testid === 'baseButton-headerNoPadding') {
+                        btns[i].click();
+                        return;
+                    }
+                }
+            };
+            window.parent.document.body.appendChild(btn);
+            
+            // Monitor sidebar state to show/hide this button
+            setInterval(function() {
+                var doc = window.parent.document;
+                var sidebar = doc.querySelector('[data-testid="stSidebar"]');
+                var isClosed = false;
+                if (sidebar) {
+                    var ariaExpanded = sidebar.getAttribute('aria-expanded');
+                    if (ariaExpanded === 'false') { isClosed = true; }
+                } else {
+                    isClosed = true;
+                }
+                
+                // Only show our custom button if the native one is missing or hidden
+                var nativeBtn = doc.querySelector('[data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"]');
+                var nativeVisible = nativeBtn && window.getComputedStyle(nativeBtn).display !== 'none' && window.getComputedStyle(nativeBtn).visibility !== 'hidden';
+                
+                if (isClosed && !nativeVisible) {
+                    btn.style.display = 'block';
+                } else {
+                    btn.style.display = 'none';
+                }
+            }, 500);
+        }
+    } catch (e) {
+        console.log("Error in custom sidebar button:", e);
+    }
+    </script>
+    """,
+    height=0,
+    width=0
+)
+
 # --- ESTILO VISUAL PREMIUM "NATURE" ---
 st.markdown("""
 <style>
@@ -40,8 +95,10 @@ st.markdown("""
     header [data-testid="stToolbar"] {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Hacer el botón de abrir barra lateral (collapsedControl) muy evidente y flotante */
-    [data-testid="collapsedControl"] {
+    /* Hacer el botón de abrir barra lateral muy evidente y flotante (múltiples selectores para compatibilidad de versión) */
+    [data-testid="collapsedControl"], 
+    [data-testid="stSidebarCollapsedControl"],
+    button[kind="header"] {
         visibility: visible !important;
         display: flex !important;
         align-items: center;
@@ -56,19 +113,25 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         cursor: pointer;
     }
-    [data-testid="collapsedControl"]:hover {
+    
+    [data-testid="collapsedControl"]:hover,
+    [data-testid="stSidebarCollapsedControl"]:hover,
+    button[kind="header"]:hover {
         background-color: #1b5e20 !important;
     }
-    /* Opcional: Agregar texto "Menú" al lado del ícono */
-    [data-testid="collapsedControl"]::after {
+    
+    [data-testid="collapsedControl"]::after,
+    [data-testid="stSidebarCollapsedControl"]::after {
         content: " Abrir Menú";
         font-family: 'Inter', sans-serif;
         font-weight: 600;
         margin-left: 5px;
         font-size: 14px;
     }
-    /* Asegurarnos que el ícono dentro sea blanco */
-    [data-testid="collapsedControl"] svg {
+    
+    [data-testid="collapsedControl"] svg,
+    [data-testid="stSidebarCollapsedControl"] svg,
+    button[kind="header"] svg {
         fill: white !important;
         color: white !important;
     }
@@ -209,7 +272,7 @@ with st.sidebar:
 
 # 1. DASHBOARD PRINCIPAL
 if menu == "🏠 Dashboard Principal":
-    st.title("🌿 Bienvenida a ECOMETRICS")
+    st.title("🌿 Bienvenida a ECOMETRICS (v2)")
     st.write("Selecciona un módulo en la barra lateral para comenzar tus análisis bioestadísticos.")
     
     col1, col2, col3 = st.columns(3)
