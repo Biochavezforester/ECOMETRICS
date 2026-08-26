@@ -1564,7 +1564,11 @@ elif menu == "🧪 Diseño Experimental":
             
         # 7. Conclusión de Potencia
         pwr_val = res.get('power', 0)
-        st.write(f"**Análisis de Potencia Real ($1-\\beta$):** `{pwr_val:.2f}`")
+        try:
+            pwr_str = f"{float(pwr_val):.2f}"
+        except (ValueError, TypeError):
+            pwr_str = str(pwr_val)
+        st.write(f"**Análisis de Potencia Real ($1-\\beta$):** `{pwr_str}`")
         st.caption("💡 La potencia estadística indica la probabilidad de detectar diferencias reales si existen. Un valor ≥ 0.80 es el estándar científico; valores menores sugieren que el tamaño de muestra es pequeño o la variabilidad es muy alta (Riesgo de Error Tipo II).")
 
         # 8. Exportación Estructurada de Memoria Técnica
