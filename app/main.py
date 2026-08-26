@@ -40,6 +40,39 @@ st.markdown("""
     header [data-testid="stToolbar"] {visibility: hidden;}
     footer {visibility: hidden;}
 
+    /* Hacer el botón de abrir barra lateral (collapsedControl) muy evidente y flotante */
+    [data-testid="collapsedControl"] {
+        visibility: visible !important;
+        display: flex !important;
+        align-items: center;
+        background-color: #2e7d32 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        padding: 0.5rem !important;
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 999999 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        cursor: pointer;
+    }
+    [data-testid="collapsedControl"]:hover {
+        background-color: #1b5e20 !important;
+    }
+    /* Opcional: Agregar texto "Menú" al lado del ícono */
+    [data-testid="collapsedControl"]::after {
+        content: " Abrir Menú";
+        font-family: 'Inter', sans-serif;
+        font-weight: 600;
+        margin-left: 5px;
+        font-size: 14px;
+    }
+    /* Asegurarnos que el ícono dentro sea blanco */
+    [data-testid="collapsedControl"] svg {
+        fill: white !important;
+        color: white !important;
+    }
+
     /* Tipografía y Colores Base */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@300;600&display=swap');
     
