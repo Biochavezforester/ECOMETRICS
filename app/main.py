@@ -35,9 +35,9 @@ st.set_page_config(
 # --- ESTILO VISUAL PREMIUM "NATURE" ---
 st.markdown("""
 <style>
-    /* Ocultar elementos incómodos de Streamlit */
+    /* Ocultar elementos incómodos de Streamlit pero dejar el botón de la barra lateral */
     #MainMenu {visibility: hidden;}
-    header {visibility: hidden;}
+    header [data-testid="stToolbar"] {visibility: hidden;}
     footer {visibility: hidden;}
 
     /* Tipografía y Colores Base */
