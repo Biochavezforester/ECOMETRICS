@@ -144,7 +144,11 @@ st.markdown("""
 
 # --- BARRA LATERAL (SIDEBAR) ---
 with st.sidebar:
-    st.image("https://img.icons8.com/flat-round/200/leaf.png", width=100)
+    logo_path = os.path.join(current_dir, "assets", "logo.jpg")
+    if os.path.exists(logo_path):
+        st.image(logo_path, use_container_width=True)
+    else:
+        st.image("https://img.icons8.com/flat-round/200/leaf.png", width=100)
     st.title("ECOMETRICS")
     st.markdown("*Inteligencia Ecológica y Monitoreo de Biodiversidad*")
     
