@@ -28,8 +28,7 @@ from modules.stats_pro_v2 import StatsProEngine, ExperimentalEngine, AdvancedSta
 st.set_page_config(
     page_title="ECOMETRICS | Suite Bioestadística para Monitoreo Ecológico",
     page_icon="🌿",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 import streamlit.components.v1 as components
@@ -44,10 +43,17 @@ components.html(
             btn.style.cssText = 'position: fixed; top: 15px; left: 15px; z-index: 999999; background: #2e7d32; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: none;';
             btn.onclick = function() {
                 var doc = window.parent.document;
-                var btns = doc.querySelectorAll('button');
+                // Intentar encontrar el botón por atributos aria
+                var expandBtn = doc.querySelector('[aria-label="Expand sidebar"], [aria-expanded="false"]');
+                if (expandBtn) {
+                    expandBtn.click();
+                    return;
+                }
+                // Fallback: buscar por data-testid
+                var btns = doc.querySelectorAll('button, div');
                 for (var i = 0; i < btns.length; i++) {
                     var testid = btns[i].getAttribute('data-testid');
-                    if (testid === 'collapsedControl' || testid === 'stSidebarCollapsedControl' || testid === 'baseButton-headerNoPadding') {
+                    if (testid === 'collapsedControl' || testid === 'stSidebarCollapsedControl') {
                         btns[i].click();
                         return;
                     }
@@ -91,9 +97,10 @@ components.html(
 st.markdown("""
 <style>
     /* Ocultar elementos incómodos de Streamlit pero dejar el botón de la barra lateral */
-    #MainMenu {visibility: hidden;}
-    header [data-testid="stToolbar"] {visibility: hidden;}
-    footer {visibility: hidden;}
+    /* Temporalmente desactivamos el ocultamiento para ver si esto rompe el botón nativo */
+    /* #MainMenu {visibility: hidden;} */
+    /* header [data-testid="stToolbar"] {visibility: hidden;} */
+    /* footer {visibility: hidden;} */
 
     /* Hacer el botón de abrir barra lateral muy evidente y flotante (múltiples selectores para compatibilidad de versión) */
     [data-testid="collapsedControl"], 
