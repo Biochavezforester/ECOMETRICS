@@ -28,120 +28,20 @@ from modules.stats_pro_v2 import StatsProEngine, ExperimentalEngine, AdvancedSta
 st.set_page_config(
     page_title="ECOMETRICS | Suite Bioestadística para Monitoreo Ecológico",
     page_icon="🌿",
-    layout="wide"
-)
-
-import streamlit.components.v1 as components
-components.html(
-    """
-    <script>
-    try {
-        if (!window.parent.document.getElementById('custom-sidebar-btn')) {
-            var btn = window.parent.document.createElement('button');
-            btn.id = 'custom-sidebar-btn';
-            btn.innerHTML = '☰ Abrir Menú';
-            btn.style.cssText = 'position: fixed; top: 15px; left: 15px; z-index: 999999; background: #2e7d32; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); display: none;';
-            btn.onclick = function() {
-                var doc = window.parent.document;
-                // Intentar encontrar el botón por atributos aria
-                var expandBtn = doc.querySelector('[aria-label="Expand sidebar"], [aria-expanded="false"]');
-                if (expandBtn) {
-                    expandBtn.click();
-                    return;
-                }
-                // Fallback: buscar por data-testid
-                var btns = doc.querySelectorAll('button, div');
-                for (var i = 0; i < btns.length; i++) {
-                    var testid = btns[i].getAttribute('data-testid');
-                    if (testid === 'collapsedControl' || testid === 'stSidebarCollapsedControl') {
-                        btns[i].click();
-                        return;
-                    }
-                }
-            };
-            window.parent.document.body.appendChild(btn);
-            
-            // Monitor sidebar state to show/hide this button
-            setInterval(function() {
-                var doc = window.parent.document;
-                var sidebar = doc.querySelector('[data-testid="stSidebar"]');
-                var isClosed = false;
-                if (sidebar) {
-                    var ariaExpanded = sidebar.getAttribute('aria-expanded');
-                    if (ariaExpanded === 'false') { isClosed = true; }
-                } else {
-                    isClosed = true;
-                }
-                
-                // Only show our custom button if the native one is missing or hidden
-                var nativeBtn = doc.querySelector('[data-testid="collapsedControl"], [data-testid="stSidebarCollapsedControl"]');
-                var nativeVisible = nativeBtn && window.getComputedStyle(nativeBtn).display !== 'none' && window.getComputedStyle(nativeBtn).visibility !== 'hidden';
-                
-                if (isClosed && !nativeVisible) {
-                    btn.style.display = 'block';
-                } else {
-                    btn.style.display = 'none';
-                }
-            }, 500);
-        }
-    } catch (e) {
-        console.log("Error in custom sidebar button:", e);
-    }
-    </script>
-    """,
-    height=0,
-    width=0
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # --- ESTILO VISUAL PREMIUM "NATURE" ---
 st.markdown("""
 <style>
-    /* Ocultar elementos incómodos de Streamlit pero dejar el botón de la barra lateral */
-    /* Temporalmente desactivamos el ocultamiento para ver si esto rompe el botón nativo */
-    /* #MainMenu {visibility: hidden;} */
-    /* header [data-testid="stToolbar"] {visibility: hidden;} */
-    /* footer {visibility: hidden;} */
-
-    /* Hacer el botón de abrir barra lateral muy evidente y flotante (múltiples selectores para compatibilidad de versión) */
-    [data-testid="collapsedControl"], 
-    [data-testid="stSidebarCollapsedControl"],
-    button[kind="header"] {
-        visibility: visible !important;
-        display: flex !important;
-        align-items: center;
-        background-color: #2e7d32 !important;
-        color: white !important;
-        border-radius: 8px !important;
-        padding: 0.5rem !important;
-        position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 999999 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        cursor: pointer;
-    }
+    /* Ocultar elementos incómodos de Streamlit pero dejar intacto el header para no romper la barra lateral */
+    #MainMenu {visibility: hidden;}
+    [data-testid="stToolbar"] {visibility: hidden;}
+    footer {visibility: hidden;}
     
-    [data-testid="collapsedControl"]:hover,
-    [data-testid="stSidebarCollapsedControl"]:hover,
-    button[kind="header"]:hover {
-        background-color: #1b5e20 !important;
-    }
-    
-    [data-testid="collapsedControl"]::after,
-    [data-testid="stSidebarCollapsedControl"]::after {
-        content: " Abrir Menú";
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-        margin-left: 5px;
-        font-size: 14px;
-    }
-    
-    [data-testid="collapsedControl"] svg,
-    [data-testid="stSidebarCollapsedControl"] svg,
-    button[kind="header"] svg {
-        fill: white !important;
-        color: white !important;
-    }
+    /* Asegurar que el fondo del header sea transparente por si acaso */
+    header {background: transparent !important;}
 
     /* Tipografía y Colores Base */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@300;600&display=swap');
@@ -279,7 +179,7 @@ with st.sidebar:
 
 # 1. DASHBOARD PRINCIPAL
 if menu == "🏠 Dashboard Principal":
-    st.title("🌿 Bienvenida a ECOMETRICS (v2)")
+    st.title("🌿 Bienvenida a ECOMETRICS")
     st.write("Selecciona un módulo en la barra lateral para comenzar tus análisis bioestadísticos.")
     
     col1, col2, col3 = st.columns(3)
