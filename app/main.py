@@ -28,20 +28,14 @@ from modules.stats_pro_v2 import StatsProEngine, ExperimentalEngine, AdvancedSta
 st.set_page_config(
     page_title="ECOMETRICS | Suite Bioestadística para Monitoreo Ecológico",
     page_icon="🌿",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 # --- ESTILO VISUAL PREMIUM "NATURE" ---
 st.markdown("""
 <style>
-    /* Ocultar elementos incómodos de Streamlit pero dejar intacto el header para no romper la barra lateral */
-    #MainMenu {visibility: hidden;}
-    [data-testid="stToolbar"] {visibility: hidden;}
-    footer {visibility: hidden;}
-    
-    /* Asegurar que el fondo del header sea transparente por si acaso */
-    header {background: transparent !important;}
+    /* El CSS que ocultaba elementos de Streamlit ha sido eliminado por completo para asegurar la visibilidad del botón */
+
 
     /* Tipografía y Colores Base */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@300;600&display=swap');
